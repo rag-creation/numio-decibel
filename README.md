@@ -38,6 +38,9 @@ Decibel is part of the [Numio](https://getnumio.org) family of open-source Andro
 
 Built by RR with help from Claude.
 
+The speaker icon in the notification and Quick Settings tile is the Material icon "volume_up" by Google,
+Apache License 2.0 ([licenses/Apache-2.0.txt](licenses/Apache-2.0.txt)).
+
 ## License
 
 [GPL-3.0](LICENSE)
