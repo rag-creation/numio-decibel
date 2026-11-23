@@ -239,6 +239,7 @@ fun BoostScreen() {
 
         // Footer
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            OfficialWordmark(dark = true, modifier = Modifier.padding(bottom = 6.dp).height(22.dp))
             Text(
                 "noAds && noInternet && openSource",
                 color = Color(0xFF7A7A7A), fontSize = 11.sp, fontFamily = FontFamily.Monospace
