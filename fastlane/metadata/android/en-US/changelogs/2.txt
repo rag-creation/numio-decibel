@@ -1,0 +1,5 @@
+- Separate boost level for the phone speaker, wired headphones and Bluetooth, switched automatically
+- Headphone limit: boost stays at +6 dB or less on headphones and Bluetooth (can be turned off)
+- One-time safety notice on first open
+- New app icon, same size as other Numio apps, with themed icon support
+- Official Numio wordmark at the bottom of the screen
