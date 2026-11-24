@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -219,11 +220,11 @@ fun BoostScreen() {
 
         // Normal / Higher
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            ModeButton("Normal", if (limited) "+6 dB on headphones" else "up to +12 dB", selected = !high, sub = accent) {
+            ModeButton("Normal", if (limited) "+6 dB on headphones" else "up to +12 dB", selected = !high, sub = accent, enabled = !limited) {
                 high = false
                 prefs.highBoost = false
             }
-            ModeButton("Higher", if (limited) "+6 dB on headphones" else "up to +24 dB", selected = high, sub = Warm) {
+            ModeButton("Higher", if (limited) "+6 dB on headphones" else "up to +24 dB", selected = high, sub = Warm, enabled = !limited) {
                 if (!high) askHigh = true
             }
         }
@@ -395,7 +396,15 @@ private fun StatusPill(running: Boolean, globalActive: Boolean, globalBlocked: B
 }
 
 @Composable
-private fun RowScope.ModeButton(title: String, subtitle: String, selected: Boolean, sub: Color, onClick: () -> Unit) {
+private fun RowScope.ModeButton(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    sub: Color,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    // Greyed out while the headphone limit decides the maximum.
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -405,7 +414,8 @@ private fun RowScope.ModeButton(title: String, subtitle: String, selected: Boole
             .clip(RoundedCornerShape(18.dp))
             .background(if (selected) Color(0xFF1C1808) else NumioCard)
             .border(1.dp, if (selected) NumioYellow else Color(0xFF262626), RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick)
+            .alpha(if (enabled) 1f else 0.4f)
+            .clickable(enabled = enabled, onClick = onClick)
     ) {
         Text(title, color = if (selected) NumioText else Color(0xFFBDBDBD), fontSize = 15.sp, fontWeight = FontWeight.Medium)
         Text(subtitle, color = sub, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
