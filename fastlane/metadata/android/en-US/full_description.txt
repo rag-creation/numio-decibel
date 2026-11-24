@@ -6,6 +6,8 @@ Turn it on, slide the boost up, and it raises the sound of every app using Andro
 <li>One big on/off button and a Quick Settings tile</li>
 <li>Volume and Boost sliders on one screen</li>
 <li>Up to +12 dB, or +24 dB with Higher boost</li>
+<li>Separate boost level for the phone speaker, wired headphones and Bluetooth</li>
+<li>Headphone limit keeps the boost at +6 dB or less on headphones</li>
 <li>Runs in the background with a notification to stop it</li>
 <li>No ads, no tracking, no internet permission</li>
 </ul>

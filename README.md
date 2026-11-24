@@ -11,6 +11,8 @@ No ads. No tracking. No internet permission.
 - One big on/off button, plus a Quick Settings tile
 - Volume and Boost sliders on one screen
 - Boost up to +12 dB, or up to +24 dB with "Higher boost" (behind a warning)
+- Separate boost level for the phone speaker, wired headphones and Bluetooth, switched automatically
+- Headphone limit: +6 dB or less on headphones and Bluetooth (can be turned off, behind a warning)
 - Keeps working in the background, with a notification to stop it
 - Works for all apps on most phones; falls back to per-app boost in music and video players that support audio effects
 
@@ -20,7 +22,7 @@ Decibel uses Android's built-in `LoudnessEnhancer` audio effect. It attaches to 
 
 ## Safety
 
-Loud sound can damage speakers and hearing. If you hear crackling, turn the boost down. Keep it low with headphones.
+Loud sound can damage speakers and hearing. If you hear crackling, turn the boost down. Keep it low with headphones. Decibel shows a safety notice on first open, and the headphone limit is on by default.
 
 ## Download
 
