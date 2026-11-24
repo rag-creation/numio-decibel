@@ -28,6 +28,11 @@ class BoostPrefs(context: Context) {
         get() = prefs.getBoolean(KEY_HEADPHONE_LIMIT, true)
         set(value) = prefs.edit().putBoolean(KEY_HEADPHONE_LIMIT, value).apply()
 
+    /** The one-time safety notice has been read. */
+    var safetyNoticeSeen: Boolean
+        get() = prefs.getBoolean(KEY_SAFETY_SEEN, false)
+        set(value) = prefs.edit().putBoolean(KEY_SAFETY_SEEN, value).apply()
+
     private fun keyFor(output: AudioOutput): String =
         if (!perOutput) KEY_PERCENT else when (output) {
             AudioOutput.SPEAKER -> KEY_PERCENT
@@ -66,6 +71,7 @@ class BoostPrefs(context: Context) {
         const val KEY_HIGH = "high_boost"
         const val KEY_PER_OUTPUT = "per_output"
         const val KEY_HEADPHONE_LIMIT = "headphone_limit"
+        const val KEY_SAFETY_SEEN = "safety_notice_seen"
 
         /** +12 dB: loud, but most phone speakers stay clean. */
         const val NORMAL_MAX_MB = 1200

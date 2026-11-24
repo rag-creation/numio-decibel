@@ -95,6 +95,7 @@ fun BoostScreen() {
     var boost by remember(output, perOutput) { mutableIntStateOf(prefs.percentFor(output)) }
     var high by remember { mutableStateOf(prefs.highBoost) }
     var askHigh by remember { mutableStateOf(false) }
+    var showSafety by remember { mutableStateOf(!prefs.safetyNoticeSeen) }
 
     // Keep the volume slider in step with the phone's volume buttons.
     DisposableEffect(Unit) {
@@ -218,11 +219,11 @@ fun BoostScreen() {
 
         // Normal / Higher
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            ModeButton("Normal", "up to +12 dB", selected = !high, sub = accent) {
+            ModeButton("Normal", if (limited) "+6 dB on headphones" else "up to +12 dB", selected = !high, sub = accent) {
                 high = false
                 prefs.highBoost = false
             }
-            ModeButton("Higher", "up to +24 dB", selected = high, sub = Warm) {
+            ModeButton("Higher", if (limited) "+6 dB on headphones" else "up to +24 dB", selected = high, sub = Warm) {
                 if (!high) askHigh = true
             }
         }
@@ -306,6 +307,30 @@ fun BoostScreen() {
             )
             Text("Made by a Keralite 💛", color = NumioMuted, fontSize = 12.sp)
         }
+    }
+
+    if (showSafety) {
+        AlertDialog(
+            onDismissRequest = {},
+            containerColor = NumioCard,
+            title = { Text("Before you boost", color = NumioText) },
+            text = {
+                Text(
+                    "Decibel makes sound louder than your phone normally allows.\n\n" +
+                        "• Loud sound for a long time can damage your hearing, especially with " +
+                        "headphones.\n" +
+                        "• Too much boost can make speakers crackle or damage them.\n\n" +
+                        "Start low and turn it up slowly. If you hear crackling, turn it down.",
+                    color = NumioMuted
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    prefs.safetyNoticeSeen = true
+                    showSafety = false
+                }) { Text("I understand", color = NumioYellow) }
+            }
+        )
     }
 
     if (askHigh) {
