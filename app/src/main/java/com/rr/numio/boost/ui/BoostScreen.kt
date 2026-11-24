@@ -38,6 +38,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -63,6 +65,7 @@ import androidx.core.content.ContextCompat
 import com.rr.numio.boost.R
 import com.rr.numio.boost.engine.BoostPrefs
 import com.rr.numio.boost.engine.BoostService
+import com.rr.numio.boost.engine.OutputMonitor
 import kotlin.math.roundToInt
 
 private const val SOURCE_URL = "https://github.com/rag-creation/numio-decibel"
@@ -84,7 +87,12 @@ fun BoostScreen() {
     ) { keepsRunning = power.isIgnoringBatteryOptimizations(context.packageName) }
 
     var volume by remember { mutableIntStateOf(audio.getStreamVolume(AudioManager.STREAM_MUSIC)) }
-    var boost by remember { mutableIntStateOf(prefs.boostPercent) }
+    remember { OutputMonitor.start(context) }
+    val output by OutputMonitor.current.collectAsState()
+    var perOutput by remember { mutableStateOf(prefs.perOutput) }
+    var limit by remember { mutableStateOf(prefs.headphoneLimit) }
+    // Each output has its own level, so reload it when headphones/Bluetooth come and go.
+    var boost by remember(output, perOutput) { mutableIntStateOf(prefs.percentFor(output)) }
     var high by remember { mutableStateOf(prefs.highBoost) }
     var askHigh by remember { mutableStateOf(false) }
 
@@ -115,7 +123,12 @@ fun BoostScreen() {
         else BoostService.start(context)
     }
 
-    val maxMb = if (high) BoostPrefs.HIGH_MAX_MB else BoostPrefs.NORMAL_MAX_MB
+    val limited = limit && output.isHeadphones
+    val maxMb = when {
+        limited -> BoostPrefs.HEADPHONE_MAX_MB
+        high -> BoostPrefs.HIGH_MAX_MB
+        else -> BoostPrefs.NORMAL_MAX_MB
+    }
     val db = boost * maxMb / 100 / 100f
     val accent = NumioYellow
 
@@ -147,6 +160,16 @@ fun BoostScreen() {
         StatusPill(running = running, globalActive = status.globalActive,
             globalBlocked = status.globalBlocked, apps = status.appSessions, accent = accent)
 
+        Text(
+            output.label + when {
+                limited -> " · headphone limit +6 dB"
+                perOutput -> " · own level"
+                else -> ""
+            },
+            color = if (limited) Warm else NumioMuted,
+            fontSize = 12.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center
+        )
+
         BoostDial(
             percent = boost,
             on = running,
@@ -154,7 +177,7 @@ fun BoostScreen() {
             accent = accent,
             onPercentChange = {
                 boost = it
-                prefs.boostPercent = it
+                prefs.setPercent(output, it)
             },
             onToggle = { toggle() }
         )
@@ -201,6 +224,29 @@ fun BoostScreen() {
             }
             ModeButton("Higher", "up to +24 dB", selected = high, sub = Warm) {
                 if (!high) askHigh = true
+            }
+        }
+
+        // Output settings
+        Card {
+            SettingSwitch(
+                title = "Separate level for each output",
+                body = "Phone speaker, wired headphones and Bluetooth each remember their own boost.",
+                checked = perOutput,
+                accent = accent
+            ) {
+                perOutput = it
+                prefs.perOutput = it
+            }
+            SettingSwitch(
+                title = "Headphone limit",
+                body = "Keeps the boost at +6 dB or less on headphones and Bluetooth, to protect your " +
+                    "ears. Android can't tell Bluetooth speakers from earbuds, so it applies to both.",
+                checked = limit,
+                accent = accent
+            ) {
+                limit = it
+                prefs.headphoneLimit = it
             }
         }
 
@@ -338,6 +384,35 @@ private fun RowScope.ModeButton(title: String, subtitle: String, selected: Boole
     ) {
         Text(title, color = if (selected) NumioText else Color(0xFFBDBDBD), fontSize = 15.sp, fontWeight = FontWeight.Medium)
         Text(subtitle, color = sub, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+    }
+}
+
+@Composable
+private fun SettingSwitch(title: String, body: String, checked: Boolean, accent: Color, onChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onChange(!checked) }
+            .padding(vertical = 6.dp)
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = NumioText, fontSize = 16.sp)
+            Text(body, color = NumioMuted, fontSize = 13.sp)
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(
+            checked = checked,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color(0xFF1A1400),
+                checkedTrackColor = accent,
+                uncheckedThumbColor = NumioMuted,
+                uncheckedTrackColor = NumioKey,
+                uncheckedBorderColor = Color(0xFF333333)
+            )
+        )
     }
 }
 
