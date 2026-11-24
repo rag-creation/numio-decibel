@@ -96,6 +96,7 @@ fun BoostScreen() {
     var boost by remember(output, perOutput) { mutableIntStateOf(prefs.percentFor(output)) }
     var high by remember { mutableStateOf(prefs.highBoost) }
     var askHigh by remember { mutableStateOf(false) }
+    var askLimitOff by remember { mutableStateOf(false) }
     var showSafety by remember { mutableStateOf(!prefs.safetyNoticeSeen) }
 
     // Keep the volume slider in step with the phone's volume buttons.
@@ -247,8 +248,12 @@ fun BoostScreen() {
                 checked = limit,
                 accent = accent
             ) {
-                limit = it
-                prefs.headphoneLimit = it
+                if (it) {
+                    limit = true
+                    prefs.headphoneLimit = true
+                } else {
+                    askLimitOff = true
+                }
             }
         }
 
@@ -330,6 +335,32 @@ fun BoostScreen() {
                     prefs.safetyNoticeSeen = true
                     showSafety = false
                 }) { Text("I understand", color = NumioYellow) }
+            }
+        )
+    }
+
+    if (askLimitOff) {
+        AlertDialog(
+            onDismissRequest = { askLimitOff = false },
+            containerColor = NumioCard,
+            title = { Text("Turn off headphone limit?", color = NumioText) },
+            text = {
+                Text(
+                    "Headphones and Bluetooth can then go up to +12 dB, or +24 dB with Higher. " +
+                        "If the boost is already high, the sound will jump straight away. " +
+                        "Turn the boost down first if you're wearing earbuds.",
+                    color = NumioMuted
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    limit = false
+                    prefs.headphoneLimit = false
+                    askLimitOff = false
+                }) { Text("Turn off", color = NumioRed) }
+            },
+            dismissButton = {
+                TextButton(onClick = { askLimitOff = false }) { Text("Cancel", color = NumioText) }
             }
         )
     }
