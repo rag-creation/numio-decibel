@@ -8,6 +8,7 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import com.rr.numio.boost.engine.BoostPrefs
 import com.rr.numio.boost.engine.BoostService
+import com.rr.numio.boost.engine.OutputMonitor
 
 /** Quick Settings tile: tap to turn Boost on or off. */
 class BoostTileService : TileService() {
@@ -50,7 +51,8 @@ class BoostTileService : TileService() {
         val tile = qsTile ?: return
         tile.state = if (on) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            tile.subtitle = if (on) "${BoostPrefs(this).boostPercent}%" else "Off"
+            OutputMonitor.start(this)
+            tile.subtitle = if (on) "${BoostPrefs(this).percentFor(OutputMonitor.current.value)}%" else "Off"
         }
         tile.updateTile()
     }

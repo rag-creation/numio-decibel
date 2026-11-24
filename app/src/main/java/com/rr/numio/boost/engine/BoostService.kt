@@ -32,8 +32,16 @@ class BoostService : Service() {
     private lateinit var prefs: BoostPrefs
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
-        engine.setGain(prefs.gainMb())
+        applyGain()
+    }
+
+    /** Headphones plugged in or Bluetooth connected: switch to that output's level. */
+    private val outputListener: (AudioOutput) -> Unit = { applyGain() }
+
+    private fun applyGain() {
+        engine.setGain(prefs.gainMb(OutputMonitor.current.value))
         updateNotification()
+        refreshTile()
     }
 
     private val sessionReceiver = object : BroadcastReceiver() {
@@ -51,6 +59,7 @@ class BoostService : Service() {
     override fun onCreate() {
         super.onCreate()
         prefs = BoostPrefs(this)
+        OutputMonitor.start(this)
         createChannel()
     }
 
@@ -76,8 +85,9 @@ class BoostService : Service() {
         }
         if (_running.value) return START_STICKY
 
-        engine.start(prefs.gainMb())
+        engine.start(prefs.gainMb(OutputMonitor.current.value))
         prefs.prefs.registerOnSharedPreferenceChangeListener(prefListener)
+        OutputMonitor.addListener(outputListener)
         ContextCompat.registerReceiver(
             this,
             sessionReceiver,
@@ -100,6 +110,7 @@ class BoostService : Service() {
     override fun onDestroy() {
         if (_running.value) {
             prefs.prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
+            OutputMonitor.removeListener(outputListener)
             try {
                 unregisterReceiver(sessionReceiver)
             } catch (_: IllegalArgumentException) {
@@ -136,11 +147,12 @@ class BoostService : Service() {
             this, 1, Intent(this, BoostService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val db = prefs.gainMb() / 100f
+        val output = OutputMonitor.current.value
+        val db = prefs.gainMb(output) / 100f
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_boost)
             .setContentTitle("Decibel is on")
-            .setContentText("Boost ${prefs.boostPercent}%  (+${"%.1f".format(db)} dB)")
+            .setContentText("${output.label} · boost ${prefs.percentFor(output)}%  (+${"%.1f".format(db)} dB)")
             .setContentIntent(open)
             .addAction(0, "Stop", stop)
             .setOngoing(true)
